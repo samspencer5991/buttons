@@ -68,27 +68,27 @@
 #ifndef BUTTONS_H_
 #define BUTTONS_H_
 
+// Include proper libraries for each supported framework
 #if FRAMEWORK == STM32CUBE
 #include "gpio.h"
 #elif FRAMEWORK == ARDUINO
 #include <Arduino.h>
 #endif
 
-#include "definition_linker.h"
-#include "stdint.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define NUM_ALL_SWITCHES 2
-
-#ifndef NUM_ALL_SWITCHES
-//#error *** Define NUM_ALL_SWITCHES according to how many buttons are being used ***
+// Check that a valid MCU core has been defined
+#ifndef MCU_CORE
+#error *** BUTTONS.H - No supported MCU core defined for GPIO handling ***
 #endif
 
 /* Debouncing and handling */
-#define DEBOUNCE_TIME 20 // minimum debounce time for mechanical switches
+// minimum debounce time for mechanical switches
+#define DEBOUNCE_TIME 20
 
 // Counter value when the acceleration is reset (button is released)
 #ifndef BUTTON_ACCELERATION_THRESHOLD
@@ -107,14 +107,9 @@ extern "C" {
 #define DOUBLE_PRESS_TIME 300
 #endif
 
-// represents function errors from the API
-typedef enum
-{
-	ButtonMemError,
-	ButtonParamError,
-	ButtonHalError,
-	ButtonOk
-} ButtonErrorState;
+#ifndef MULTIPLE_BUTTON_TIME
+#define MULTIPLE_BUTTON_TIME 100
+#endif
 
 typedef enum
 {
@@ -159,52 +154,37 @@ typedef enum
 // Stores data related to each button
 typedef struct
 {
-	ButtonMode mode;								// physical hardware type of the button (eg. latching or momentary)
-	volatile ButtonState state;				// current state of button. Also used to trigger polled handler functions
-	volatile ButtonState lastState; 			// previous state of button (used for toggling and debouncing)
-	volatile uint32_t lastTime;				// time since last event (used for debouncing and holding)
-	uint8_t accelerationCounter;				// May be used in application to track hold acceleration functionality
+	ButtonMode mode;				    // physical hardware type of the button (eg. latching or momentary)
+	volatile ButtonState state;		    // current state of button. Also used to trigger polled handler functions
+	volatile ButtonState lastState;     // previous state of button (used for toggling and debouncing)
+	volatile uint32_t lastTime;		    // time since last event (used for debouncing and holding)
+	uint8_t accelerationCounter;	    // May be used in application to track hold acceleration functionality
 	uint8_t accelerationThreshold;
 	volatile uint8_t accelerationTrigger;
-	uint16_t pin;									// hardware pin
-#if FRAMEWORK == STM32CUBE
-	GPIO_TypeDef *port;							// hardware port
+#if FRAMEWORK == ARDUINO
+	uint16_t pin;						// hardware pin
+#elif FRAMEWORK == STM32CUBE
+    GPIO_TypeDef *port;					// hardware port
 #endif
-	uint8_t pressEvent;							// Stores whether a press event has occured so that the release event is cancelled
-	ButtonLogic logicMode;						// Sets whether the input is active low or high
-	void (*handler)(ButtonState state); 	// pointer to the handler function for that button
+	uint8_t pressEvent;					// Stores whether a press event has occured so that the release event is cancelled
+	ButtonLogic logicMode;				// Sets whether the input is active low or high
+	void (*handler)(ButtonState state); // pointer to the handler function for that button
 } Button;
 
-/* PUBLIC FUNCTION PROTOTYPES */
-/* SETUP FUNCTIONS */
-#if FRAMEWORK == ARDUINO
-// ButtonErrorState buttons_setHoldTimer(TIM_HandleTypeDef *timHandle, uint16_t time);
-ButtonErrorState buttons_create(uint32_t GPIO_Pin, ButtonMode mode, ButtonLogic logicMode,
-								uint16_t index, void (*funcp)(ButtonState state));
-
-#elif FRAMEWORK == STM32CUBE
-ButtonErrorState buttons_setHoldTimer(TIM_HandleTypeDef *timHandle, uint16_t time);
-ButtonErrorState buttons_create(GPIO_TypeDef *GPIOx, uint32_t GPIO_Pin, ButtonMode mode, ButtonLogic logicMode,
-								uint16_t index, void (*funcp)(ButtonState state));
-#endif
-
-/* SET FUNCTIONS */
-ButtonErrorState buttons_setState(uint8_t index, ButtonState state);
-ButtonErrorState buttons_setLastState(uint8_t index, ButtonState state);
-
-/* GET FUNCTIONS */
-uint32_t buttons_getPin(uint16_t index);
-ButtonState buttons_getState(uint8_t index);
+//-------------- PUBLIC FUNCTION PROTOTYPES --------------//
+void buttons_AssignTimerStopCallback(void (*callback)(void));
+void buttons_AssignTimerStartCallback(void (*callback)(void));
+void buttons_AssignTimerGetCounterCallback(uint32_t (*callback)(void));
+void buttons_Init(Button* button);
 
 /* POLLING/LOOP FUNCTIONS */
-void buttons_extiGpioCallback(uint16_t index, ButtonEmulateAction emulateAction);
-void buttons_holdTimerElapsed();
-void buttons_triggerPoll();
-
-extern volatile Button buttons[NUM_ALL_SWITCHES];
+void buttons_ExtiGpioCallback(uint16_t index, ButtonEmulateAction emulateAction);
+void buttons_HoldTimerElapsed();
+void buttons_TriggerPoll();
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* BUTTONS_H_ */
+
