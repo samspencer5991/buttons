@@ -64,14 +64,13 @@
  * and then every button required for the event can be checked. The extra buttons
  * have to have their states reset to cleared as this is only done for the first button.
  */
-
 #ifndef BUTTONS_H_
 #define BUTTONS_H_
 
 // Include proper libraries for each supported framework
-#if FRAMEWORK == STM32CUBE
+#if FRAMEWORK_STM32CUBE
 #include "gpio.h"
-#elif FRAMEWORK == ARDUINO
+#elif FRAMEWORK_ARDUINO
 #include <Arduino.h>
 #endif
 
@@ -82,7 +81,7 @@ extern "C" {
 #endif
 
 // Check that a valid MCU core has been defined
-#ifndef MCU_CORE
+#if !defined(MCU_CORE_RP2040) && !defined(MCU_CORE_STM32)
 #error *** BUTTONS.H - No supported MCU core defined for GPIO handling ***
 #endif
 
@@ -161,9 +160,9 @@ typedef struct
 	uint8_t accelerationCounter;	    // May be used in application to track hold acceleration functionality
 	uint8_t accelerationThreshold;
 	volatile uint8_t accelerationTrigger;
-#if FRAMEWORK == ARDUINO
+#if FRAMEWORK_ARDUINO
 	uint16_t pin;						// hardware pin
-#elif FRAMEWORK == STM32CUBE
+#elif FRAMEWORK_STM32CUBE
     GPIO_TypeDef *port;					// hardware port
 #endif
 	uint8_t pressEvent;					// Stores whether a press event has occured so that the release event is cancelled
@@ -178,13 +177,12 @@ void buttons_AssignTimerGetCounterCallback(uint32_t (*callback)(void));
 void buttons_Init(Button* button);
 
 /* POLLING/LOOP FUNCTIONS */
-void buttons_ExtiGpioCallback(uint16_t index, ButtonEmulateAction emulateAction);
-void buttons_HoldTimerElapsed();
-void buttons_TriggerPoll();
+void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction);
+void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons);
+void buttons_TriggerPoll(Button* buttons, uint16_t numButtons);
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* BUTTONS_H_ */
-

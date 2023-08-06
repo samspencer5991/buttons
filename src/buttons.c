@@ -85,16 +85,16 @@ void buttons_TriggerPoll(Button* buttons, uint16_t numButtons)
 	// Note that the full loop is allowed to continue in case multiple interrupts were fired before polling
 	for(int i=0; i<numButtons; i++)
 	{
-		if(buttons[i]->state != Cleared)
+		if(buttons[i].state != Cleared)
 		{
 			ButtonState tempState = buttons[i].state;
-			buttons[i]->state = Cleared;
-			buttons[i]->handler(tempState);
+			buttons[i].state = Cleared;
+			buttons[i].handler(tempState);
 		}
-		if(buttons[i]->accelerationTrigger)
+		if(buttons[i].accelerationTrigger)
 		{
-			buttons[i]->handler(HeldRepeat);
-			buttons[i]->accelerationTrigger = FALSE;
+			buttons[i].handler(HeldRepeat);
+			buttons[i].accelerationTrigger = FALSE;
 		}
 	}
 }
@@ -110,10 +110,10 @@ void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons)
 	for(int i=0; i<numButtons; i++)
 	{
 		// Check not only if the button has not been released, but if a timer event was triggered for that button
-		if(buttons[i]->lastState == Pressed && ((timerTriggered >> i) & 1))
+		if(buttons[i].lastState == Pressed && ((timerTriggered >> i) & 1))
 		{
-			buttons[i]->state = Held;
-			buttons[i]->lastState = Held;
+			buttons[i].state = Held;
+			buttons[i].lastState = Held;
 		}
 	}
 	timerTriggered = CLEAR;
@@ -165,7 +165,11 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	}
 
 	// Debounce correct button and set handler flags to indicate an action
+#if FRAMEWORK_ARDUINO
 	tickTime = millis();
+#elif FRAMEWORK_STM32CUBE
+	tickTime = HAL_GetTick();
+#endif
 	if((tickTime - button->lastTime) > DEBOUNCE_TIME)
 	{
 
@@ -176,19 +180,19 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 		{
 			// Check to see if the timer has already been started (aka. another switch is already being held)
 			// If it has, but the time since it was triggered is below the threshold, include that button in the timerTriggered flag
-			if(timerConfigured
+			if(timerConfigured)
 			{
 				if(timerTriggered == CLEAR)
 				{
-					timerTriggered |= (1 << index);
+					//timerTriggered |= (1 << index);
 					timerStartCallback();
 				}
 
 				// Check if another switch was pressed around the same time, and set it's timerTriggered flag too
 				// But don't start the timer as it was already started, and the first button should trigger the hold timer
-				else if(holdTim->Instance->CNT <= MULTIPLE_BUTTON_TIME)
+				else if(timerGetCountCallback() <= MULTIPLE_BUTTON_TIME)
 				{
-					timerTriggered |= (1 << index);
+					//timerTriggered |= (1 << index);
 				}
 			}
 			
@@ -247,9 +251,9 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 //-------------- PRIVATE FUNCTIONS --------------//
 uint8_t buttons_GetPinState(Button* button)
 {
-#if MCU_CORE == RP2040
+#if MCU_CORE_RP2040
     return gpio_get(button->pin);
-#elif MCU_CORE == STM32
+#elif MCU_CORE_STM32
     return (buttons[index].port->IDR & buttons[index].pin);
 #endif
 }
