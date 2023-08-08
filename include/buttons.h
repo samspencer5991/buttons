@@ -160,9 +160,8 @@ typedef struct
 	uint8_t accelerationCounter;	    // May be used in application to track hold acceleration functionality
 	uint8_t accelerationThreshold;
 	volatile uint8_t accelerationTrigger;
-#if FRAMEWORK_ARDUINO
 	uint16_t pin;						// hardware pin
-#elif FRAMEWORK_STM32CUBE
+#if FRAMEWORK_STM32CUBE
     GPIO_TypeDef *port;					// hardware port
 #endif
 	uint8_t pressEvent;					// Stores whether a press event has occured so that the release event is cancelled

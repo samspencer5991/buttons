@@ -1,6 +1,6 @@
 {
     "name": "Buttons",
-    "version": "0.9.0",
+    "version": "0.9.1",
     "keywords": "switch, button, gpio, toggle, tactile",
     "description": "Button and switch event handling for embedded systems",
     "repository": {
