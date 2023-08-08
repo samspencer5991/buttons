@@ -129,7 +129,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	if(emulateAction == ButtonEmulateNone)
 	{
 		// There is no need to access the button pin as the parameter is used
-		if(buttons_GetPinState != 0)
+		if(buttons_GetPinState(button) != 0)
 		{
 			// Check for physical logic state mode
 			if(button->logicMode == ActiveLow)
@@ -254,7 +254,7 @@ uint8_t buttons_GetPinState(Button* button)
 #if MCU_CORE_RP2040
     return gpio_get(button->pin);
 #elif MCU_CORE_STM32
-    return (buttons[index].port->IDR & buttons[index].pin);
+    return (button->port->IDR & button->pin);
 #endif
 }
 
