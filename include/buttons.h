@@ -153,20 +153,23 @@ typedef enum
 // Stores data related to each button
 typedef struct
 {
+   // Assign in application
 	ButtonMode mode;				    // physical hardware type of the button (eg. latching or momentary)
+   ButtonLogic logicMode;				// Sets whether the input is active low or high
+	void (*handler)(ButtonState state); // pointer to the handler function for that button
+   uint16_t pin;						// hardware pin
+#if FRAMEWORK_STM32CUBE
+    GPIO_TypeDef *port;					// hardware port
+#endif
+   // Private
 	volatile ButtonState state;		    // current state of button. Also used to trigger polled handler functions
 	volatile ButtonState lastState;     // previous state of button (used for toggling and debouncing)
 	volatile uint32_t lastTime;		    // time since last event (used for debouncing and holding)
 	uint8_t accelerationCounter;	    // May be used in application to track hold acceleration functionality
 	uint8_t accelerationThreshold;
 	volatile uint8_t accelerationTrigger;
-	uint16_t pin;						// hardware pin
-#if FRAMEWORK_STM32CUBE
-    GPIO_TypeDef *port;					// hardware port
-#endif
 	uint8_t pressEvent;					// Stores whether a press event has occured so that the release event is cancelled
-	ButtonLogic logicMode;				// Sets whether the input is active low or high
-	void (*handler)(ButtonState state); // pointer to the handler function for that button
+	
 } Button;
 
 //-------------- PUBLIC FUNCTION PROTOTYPES --------------//
