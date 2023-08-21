@@ -169,7 +169,6 @@ typedef struct
 	uint8_t accelerationThreshold;
 	volatile uint8_t accelerationTrigger;
 	uint8_t pressEvent;					// Stores whether a press event has occured so that the release event is cancelled
-	
 } Button;
 
 //-------------- PUBLIC FUNCTION PROTOTYPES --------------//
