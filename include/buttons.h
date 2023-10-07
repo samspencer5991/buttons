@@ -69,16 +69,14 @@
 
 // Include proper libraries for each supported framework
 #if FRAMEWORK_STM32CUBE
-#include "gpio.h"
+#if defined(STM32G4xx)
+#include "stm32g4xx_hal.h"
+#endif
 #elif FRAMEWORK_ARDUINO
 #include <Arduino.h>
 #endif
 
 #include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // Check that a valid MCU core has been defined
 #if !defined(MCU_CORE_RP2040) && !defined(MCU_CORE_STM32)
@@ -154,36 +152,36 @@ typedef enum
 typedef struct
 {
    // Assign in application
-	ButtonMode mode;				    // physical hardware type of the button (eg. latching or momentary)
-   ButtonLogic logicMode;				// Sets whether the input is active low or high
+	ButtonMode mode;				    		// physical hardware type of the button (eg. latching or momentary)
+   ButtonLogic logicMode;					// Sets whether the input is active low or high
 	void (*handler)(ButtonState state); // pointer to the handler function for that button
-   uint16_t pin;						// hardware pin
+   uint16_t pin;								// hardware pin
 #if FRAMEWORK_STM32CUBE
-    GPIO_TypeDef *port;					// hardware port
+    GPIO_TypeDef *port;						// hardware port
 #endif
    // Private
-	volatile ButtonState state;		    // current state of button. Also used to trigger polled handler functions
-	volatile ButtonState lastState;     // previous state of button (used for toggling and debouncing)
-	volatile uint32_t lastTime;		    // time since last event (used for debouncing and holding)
-	uint8_t accelerationCounter;	    // May be used in application to track hold acceleration functionality
+	volatile ButtonState state;		    	// current state of button. Also used to trigger polled handler functions
+	volatile ButtonState lastState;     	// previous state of button (used for toggling and debouncing)
+	volatile uint32_t lastTime;		    	// time since last event (used for debouncing and holding)
+	uint8_t accelerationCounter;				// May be used in application to track hold acceleration functionality
 	uint8_t accelerationThreshold;
 	volatile uint8_t accelerationTrigger;
-	uint8_t pressEvent;					// Stores whether a press event has occured so that the release event is cancelled
+	uint8_t pressEvent;							// Stores whether a press event has occured so that the release event is cancelled
+	volatile uint8_t timerTriggered;
 } Button;
 
 //-------------- PUBLIC FUNCTION PROTOTYPES --------------//
+#if FRAMEWORK_ARDUINO
 void buttons_AssignTimerStopCallback(void (*callback)(void));
 void buttons_AssignTimerStartCallback(void (*callback)(void));
 void buttons_AssignTimerGetCounterCallback(uint32_t (*callback)(void));
+#elif FRAMEWORK_STM32CUBE
+void buttons_SetHoldTimer(TIM_HandleTypeDef *timHandle, uint16_t time);
+#endif
 void buttons_Init(Button* button);
 
-/* POLLING/LOOP FUNCTIONS */
 void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction);
 void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons);
 void buttons_TriggerPoll(Button* buttons, uint16_t numButtons);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* BUTTONS_H_ */
