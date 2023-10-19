@@ -40,6 +40,7 @@ uint16_t buttonHoldTime;
 
 //-------------- PRIVATE FUNCTION PROTOTYPES --------------//
 uint8_t buttons_GetPinState(Button* button);
+void buttons_ResetTimerCOunter();
 
 
 //-------------- PUBLIC FUNCTIONS --------------//
@@ -111,6 +112,7 @@ void buttons_SetHoldTimer(TIM_HandleTypeDef *timHandle, uint16_t time)
 		return;
 	}
 	__HAL_TIM_CLEAR_FLAG(holdTim, TIM_IT_UPDATE);
+	buttons_ResetTimerCOunter();
 	return;
 }
 
@@ -215,19 +217,16 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	{
 
 
-		// NEW PRESS //
+		// NEW PRESS
 		// There is no need to check other conditions as time since release isn't important
-		if(!interruptState)
+		// A new press event should only be actioned after a release event for debouncing
+		if(!interruptState && (button->lastState == Released || button->lastState == DoublePressReleased
+										|| button->lastState == HeldReleased))
 		{
 			// Check to see if the timer has already been started (aka. another switch is already being held)
 			// If it has, but the time since it was triggered is below the threshold, include that button in the timerTriggered flag
 			if(timerConfigured)
 			{
-				#if FRAMEWORK_STM32CUBE
-				tickTime = HAL_GetTick();
-				#elif FRAMEWORK_ARDUINO
-				tickTime = timerGetCountCallback();
-				#endif
 				if(!button->timerTriggered)
 				{
 					button->timerTriggered = 1;
@@ -261,7 +260,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 		}
 
 		// NEW RELEASED //
-		else
+		else if(button->lastState == Pressed || button->lastState == DoublePressed || button->lastState == Held)
 		{
 			if(button->lastState == Pressed)
 			{
@@ -269,6 +268,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 				{
 					#if FRAMEWORK_STM32CUBE
 					HAL_TIM_Base_Stop_IT(holdTim);
+					buttons_ResetTimerCOunter();
 					#elif FRAMEWORK_ARDUINO
 					timerStopCallback();
 					#endif
@@ -293,6 +293,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 				{
 					#if FRAMEWORK_STM32CUBE
 					HAL_TIM_Base_Stop_IT(holdTim);
+					buttons_ResetTimerCOunter();
 					#elif FRAMEWORK_ARDUINO
 					timerStopCallback();
 					#endif
@@ -314,6 +315,13 @@ uint8_t buttons_GetPinState(Button* button)
 	return gpio_get(button->pin);
 #elif MCU_CORE_STM32
 	return HAL_GPIO_ReadPin(button->port, button->pin); 
+#endif
+}
+
+void buttons_ResetTimerCOunter()
+{
+#if FRAMEWORK_STM32CUBE
+	__HAL_TIM_SET_COUNTER(holdTim, 0);
 #endif
 }
 
