@@ -78,6 +78,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Check that a valid MCU core has been defined
 #if !defined(MCU_CORE_RP2040) && !defined(MCU_CORE_STM32)
 #error *** BUTTONS.H - No supported MCU core defined for GPIO handling ***
@@ -183,5 +187,9 @@ void buttons_Init(Button* button);
 void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction);
 void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons);
 void buttons_TriggerPoll(Button* buttons, uint16_t numButtons);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* BUTTONS_H_ */

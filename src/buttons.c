@@ -128,7 +128,8 @@ void buttons_TriggerPoll(Button* buttons, uint16_t numButtons)
 		{
 			ButtonState tempState = buttons[i].state;
 			buttons[i].state = Cleared;
-			buttons[i].handler(tempState);
+			if(buttons[i].handler != NULL)
+				buttons[i].handler(tempState);
 		}
 		if(buttons[i].accelerationTrigger)
 		{
@@ -145,7 +146,8 @@ void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons)
 #if FRAMEWORK_STM32CUBE
 		HAL_TIM_Base_Stop_IT(holdTim);
 #elif FRAMEWORK_ARDUINO
-		timerStopCallback();
+		if(timerStopCallback != NULL)
+			timerStopCallback();
 #endif
 	}
 	// Check hold states for all the buttons before hold is actioned
@@ -171,7 +173,6 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	// If the button press is a hardware pin interrupt event
 	if(emulateAction == ButtonEmulateNone)
 	{
-		// There is no need to access the button pin as the parameter is used
 		if(buttons_GetPinState(button) != 0)
 		{
 			// Check for physical logic state mode
@@ -211,7 +212,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	#if FRAMEWORK_STM32CUBE
 	tickTime = HAL_GetTick();
 	#elif FRAMEWORK_ARDUINO
-	tickTime = timerGetCountCallback();
+	tickTime = millis();
 	#endif
 	if((tickTime - button->lastTime) > DEBOUNCE_TIME)
 	{
@@ -233,7 +234,8 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 					#if FRAMEWORK_STM32CUBE
 					HAL_TIM_Base_Start_IT(holdTim);
 					#elif FRAMEWORK_ARDUINO
-					timerStartCallback();
+					if(timerStartCallback != NULL)
+						timerStartCallback();
 					#endif
 				}
 
@@ -270,7 +272,8 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 					HAL_TIM_Base_Stop_IT(holdTim);
 					buttons_ResetTimerCOunter();
 					#elif FRAMEWORK_ARDUINO
-					timerStopCallback();
+					if(timerStopCallback != NULL)
+						timerStopCallback();
 					#endif
 				}
 				button->state = Released;
@@ -295,7 +298,8 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 					HAL_TIM_Base_Stop_IT(holdTim);
 					buttons_ResetTimerCOunter();
 					#elif FRAMEWORK_ARDUINO
-					timerStopCallback();
+					if(timerStopCallback != NULL)
+						timerStopCallback();
 					#endif
 				}
 				button->state = DoublePressReleased;
