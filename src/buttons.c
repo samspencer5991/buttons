@@ -216,8 +216,6 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	#endif
 	if((tickTime - button->lastTime) > DEBOUNCE_TIME)
 	{
-
-
 		// NEW PRESS
 		// There is no need to check other conditions as time since release isn't important
 		// A new press event should only be actioned after a release event for debouncing
