@@ -40,7 +40,7 @@ uint16_t buttonHoldTime;
 
 //-------------- PRIVATE FUNCTION PROTOTYPES --------------//
 uint8_t buttons_GetPinState(Button* button);
-void buttons_ResetTimerCOunter();
+void buttons_ResetTimerCounter();
 
 
 //-------------- PUBLIC FUNCTIONS --------------//
@@ -111,8 +111,9 @@ void buttons_SetHoldTimer(TIM_HandleTypeDef *timHandle, uint16_t time)
 	{
 		return;
 	}
+	HAL_TIM_Base_Stop_IT(holdTim);
 	__HAL_TIM_CLEAR_FLAG(holdTim, TIM_IT_UPDATE);
-	buttons_ResetTimerCOunter();
+	buttons_ResetTimerCounter();
 	return;
 }
 
@@ -155,7 +156,7 @@ void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons)
 	for(int i=0; i<numButtons; i++)
 	{
 		// Check not only if the button has not been released, but if a timer event was triggered for that button
-		if(buttons[i].lastState == Pressed && buttons[i].timerTriggered)
+		if(buttons[i].lastState == Pressed || buttons[i].lastState == DoublePressed && buttons[i].timerTriggered)
 		{
 			buttons[i].state = Held;
 			buttons[i].lastState = Held;
@@ -268,7 +269,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 				{
 					#if FRAMEWORK_STM32CUBE
 					HAL_TIM_Base_Stop_IT(holdTim);
-					buttons_ResetTimerCOunter();
+					buttons_ResetTimerCounter();
 					#elif FRAMEWORK_ARDUINO
 					if(timerStopCallback != NULL)
 						timerStopCallback();
@@ -294,7 +295,7 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 				{
 					#if FRAMEWORK_STM32CUBE
 					HAL_TIM_Base_Stop_IT(holdTim);
-					buttons_ResetTimerCOunter();
+					buttons_ResetTimerCounter();
 					#elif FRAMEWORK_ARDUINO
 					if(timerStopCallback != NULL)
 						timerStopCallback();
@@ -320,7 +321,7 @@ uint8_t buttons_GetPinState(Button* button)
 #endif
 }
 
-void buttons_ResetTimerCOunter()
+void buttons_ResetTimerCounter()
 {
 #if FRAMEWORK_STM32CUBE
 	__HAL_TIM_SET_COUNTER(holdTim, 0);
