@@ -83,8 +83,8 @@ extern "C" {
 #endif
 
 // Check that a valid MCU core has been defined
-#if !defined(MCU_CORE_RP2040) && !defined(MCU_CORE_STM32)
-#error *** BUTTONS.H - No supported MCU core defined for GPIO handling ***
+#if !defined(FRAMEWORK_ARDUINO) && !defined(FRAMEWORK_STM32CUBE)
+#error *** BUTTONS.H - No supported framework defined for GPIO handling ***
 #endif
 
 /* Debouncing and handling */
