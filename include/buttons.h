@@ -89,7 +89,7 @@ extern "C" {
 
 /* Debouncing and handling */
 // minimum debounce time for mechanical switches
-#define DEBOUNCE_TIME 20
+#define DEBOUNCE_TIME 5
 
 // Counter value when the acceleration is reset (button is released)
 #ifndef BUTTON_ACCELERATION_THRESHOLD
