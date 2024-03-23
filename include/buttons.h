@@ -71,6 +71,8 @@
 #if FRAMEWORK_STM32CUBE
 #if defined(STM32G4xx)
 #include "stm32g4xx_hal.h"
+#elif defined(STM32H5xx)
+#include "stm32h5xx_hal.h"
 #endif
 #elif FRAMEWORK_ARDUINO
 #include <Arduino.h>
