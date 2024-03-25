@@ -156,7 +156,7 @@ void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons)
 	for(int i=0; i<numButtons; i++)
 	{
 		// Check not only if the button has not been released, but if a timer event was triggered for that button
-		if(buttons[i].lastState == Pressed || buttons[i].lastState == DoublePressed && buttons[i].timerTriggered)
+		if((buttons[i].lastState == Pressed || buttons[i].lastState == DoublePressed) && buttons[i].timerTriggered)
 		{
 			buttons[i].state = Held;
 			buttons[i].lastState = Held;
