@@ -89,9 +89,16 @@ extern "C" {
 #error *** BUTTONS.H - No supported framework defined for GPIO handling ***
 #endif
 
+// Debouncing logic:
+// Minimum practical switch windows (total active time) = 20ms
+// Minimum time between previous release and next press = 100ms
+
+
 /* Debouncing and handling */
 // minimum debounce time for mechanical switches
 #define DEBOUNCE_TIME 5
+#define DEBOUNCE_LOW_TO_HIGH 10
+#define DEBOUNCE_HIGH_TO_LOW 50
 
 // Counter value when the acceleration is reset (button is released)
 #ifndef BUTTON_ACCELERATION_THRESHOLD

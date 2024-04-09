@@ -17,6 +17,8 @@ extern "C" {
 #define FALSE	0
 #define CLEAR 0
 
+volatile uint8_t debounceFail = 0;
+
 /* For accurate button hold fundtionality, the main application must configure a timer,
 * and assign the following callbacks. On the timer interrupt, buttons_holdTimerElapsed must be called
 * with all required sequential button pointers and the number of buttons.
@@ -167,7 +169,6 @@ void buttons_HoldTimerElapsed(Button* buttons, uint16_t numButtons)
 
 void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 {
-
 	uint8_t interruptState = 0;
 	uint32_t tickTime;
 
@@ -215,7 +216,10 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 	#elif FRAMEWORK_ARDUINO
 	tickTime = millis();
 	#endif
-	if((tickTime - button->lastTime) > DEBOUNCE_TIME)
+	// For a a new press event, the time since last release must be greater than the high to low debounce time
+
+	if((interruptState == 0 && (tickTime - button->lastTime) > DEBOUNCE_HIGH_TO_LOW) ||
+		(interruptState == 1 && (tickTime - button->lastTime) > DEBOUNCE_LOW_TO_HIGH))
 	{
 		// NEW PRESS
 		// There is no need to check other conditions as time since release isn't important
@@ -307,6 +311,10 @@ void buttons_ExtiGpioCallback(Button* button, ButtonEmulateAction emulateAction)
 			}
 		}
 		button->lastTime = tickTime;
+	}
+	else
+	{
+		debounceFail = 1;
 	}
 }
 
